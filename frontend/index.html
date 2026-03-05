@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="College complaint management platform for students in Indore to submit, track, and review complaint updates." />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#0b5ea6" />
+  <title>Indore Complaint Management Portal</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header" id="siteHeader">
+    <div class="container nav-shell">
+      <button id="backButton" class="back-btn" type="button" aria-label="Go to previous page">Back</button>
+      <a href="#home" class="brand" data-route-link="home">Indore Complaint Portal</a>
+
+      <button id="themeToggle" class="theme-btn" type="button" aria-label="Toggle dark mode">Dark</button>
+      <button id="menuButton" class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+
+      <nav id="mainNav" class="main-nav" aria-label="Primary">
+        <a href="#home" data-route-link="home" class="active">Home</a>
+        <a href="#submit" data-route-link="submit">Submit</a>
+        <a href="#view" data-route-link="view">View</a>
+        <a href="#track" data-route-link="track">Track</a>
+        <a href="#auth" data-route-link="auth">User Sign In</a>
+        <a href="#admin" data-route-link="admin">Admin Sign In</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-shell container" id="appRoot">
+    <section class="page active" data-route="home" id="home" aria-labelledby="homeTitle">
+      <div class="hero-card">
+        <div>
+          <p class="eyebrow">Complaint Management System</p>
+          <h1 id="homeTitle">Modern Complaint Management for Colleges in Indore</h1>
+          <p class="lead">
+            Students can report infrastructure, cleanliness, facilities, faculty, internet, and hostel issues.
+            Name and email are optional during complaint submission.
+          </p>
+          <button class="primary-btn section-jump" data-target-route="submit" type="button">Submit a Complaint</button>
+        </div>
+        <div class="quick-points">
+          <article>
+            <h3>Optional Identity</h3>
+            <p>Name and Email can be left blank for anonymous-like submission.</p>
+          </article>
+          <article>
+            <h3>Track with Complaint ID</h3>
+            <p>Check status updates with Complaint ID and optional email.</p>
+          </article>
+          <article>
+            <h3>Owner-Controlled Admin Access</h3>
+            <p>Only approved users can become admin. Owner approves requests.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" data-route="submit" id="submit" aria-labelledby="submitTitle" hidden>
+      <div class="section-head">
+        <p class="eyebrow">Submit Complaint</p>
+        <h2 id="submitTitle">Register a New Complaint</h2>
+        <p>Required: College, Category, Title, Description. Name and Email are optional.</p>
+      </div>
+
+      <div class="form-card">
+        <form id="complaintForm" class="portal-form" enctype="multipart/form-data">
+          <div class="form-grid two">
+            <label>
+              Student Name (Optional)
+              <input type="text" id="studentName" name="studentName" placeholder="Enter name (optional)" />
+            </label>
+            <label>
+              Email (Optional)
+              <input type="email" id="email" name="email" placeholder="Enter email (optional)" />
+            </label>
+          </div>
+
+          <div class="form-grid two">
+            <label>
+              Select College
+              <select id="college" name="college" required></select>
+            </label>
+            <label>
+              Category
+              <select id="category" name="category" required>
+                <option value="">Choose category</option>
+                <option value="Infrastructure">Infrastructure</option>
+                <option value="Cleanliness">Cleanliness</option>
+                <option value="Faculty">Faculty</option>
+                <option value="Facilities">Facilities</option>
+                <option value="Internet">Internet</option>
+                <option value="Hostel">Hostel</option>
+                <option value="Other">Other</option>
+              </select>
+            </label>
+          </div>
+
+          <label>
+            Complaint Title
+            <input type="text" id="title" name="title" required placeholder="Short complaint title" />
+          </label>
+
+          <label>
+            Complaint Description
+            <textarea id="description" name="description" rows="5" required placeholder="Describe the issue"></textarea>
+          </label>
+
+          <label>
+            Upload Image Evidence (Optional)
+            <input type="file" id="image" name="image" accept="image/*" />
+          </label>
+
+          <img id="imagePreview" class="image-preview hidden" alt="Preview" />
+          <p id="submitMessage" class="feedback-text"></p>
+
+          <button class="primary-btn" type="submit">Submit & Return Home</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="page" data-route="view" id="view" aria-labelledby="viewTitle" hidden>
+      <div class="section-head">
+        <p class="eyebrow">View Complaints</p>
+        <h2 id="viewTitle">Public Complaint Board</h2>
+        <p>Filter by college, category, status or search by complaint title/ID.</p>
+      </div>
+
+      <div class="form-card">
+        <div class="filters-grid">
+          <input type="search" id="searchInput" placeholder="Search complaints..." />
+          <select id="filterCollege"></select>
+          <select id="filterCategory">
+            <option value="">All Categories</option>
+            <option value="Infrastructure">Infrastructure</option>
+            <option value="Cleanliness">Cleanliness</option>
+            <option value="Faculty">Faculty</option>
+            <option value="Facilities">Facilities</option>
+            <option value="Internet">Internet</option>
+            <option value="Hostel">Hostel</option>
+            <option value="Other">Other</option>
+          </select>
+          <select id="filterStatus">
+            <option value="">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Resolved">Resolved</option>
+          </select>
+        </div>
+
+        <div id="complaintsGrid" class="complaints-grid"></div>
+      </div>
+    </section>
+
+    <section class="page" data-route="track" id="track" aria-labelledby="trackTitle" hidden>
+      <div class="section-head">
+        <p class="eyebrow">Track Complaint</p>
+        <h2 id="trackTitle">Check Complaint Status</h2>
+        <p>Complaint ID is required. Email is optional.</p>
+      </div>
+
+      <div class="form-card">
+        <form id="trackForm" class="portal-form">
+          <div class="form-grid two">
+            <label>
+              Complaint ID
+              <input type="text" id="trackComplaintId" required placeholder="IND-CMP-XXXX" />
+            </label>
+            <label>
+              Email (Optional)
+              <input type="email" id="trackEmail" placeholder="Enter email (optional)" />
+            </label>
+          </div>
+
+          <button class="primary-btn" type="submit">Check Status</button>
+        </form>
+
+        <div id="trackResult" class="track-result"></div>
+      </div>
+    </section>
+
+    <section class="page" data-route="auth" id="auth" aria-labelledby="authTitle" hidden>
+      <div class="section-head">
+        <p class="eyebrow">User Authentication</p>
+        <h2 id="authTitle">User Sign Up and User Sign In</h2>
+        <p>Sign in as a user to request admin permission. Owner can set password using signup with harshkamle03@gmail.com.</p>
+      </div>
+
+      <div class="auth-layout">
+        <div class="form-card">
+          <h3>User Sign Up</h3>
+          <form id="userSignupForm" class="portal-form">
+            <label>
+              Name (Optional)
+              <input type="text" id="signupName" placeholder="Your name" />
+            </label>
+            <label>
+              Email
+              <input type="email" id="signupEmail" required placeholder="you@example.com" />
+            </label>
+            <label>
+              Password
+              <input type="password" id="signupPassword" required minlength="6" placeholder="Minimum 6 characters" />
+            </label>
+            <button class="primary-btn" type="submit">Sign Up</button>
+          </form>
+        </div>
+
+        <div class="form-card">
+          <h3>User Sign In</h3>
+          <form id="userLoginForm" class="portal-form">
+            <label>
+              Email
+              <input type="email" id="loginEmail" required placeholder="you@example.com" />
+            </label>
+            <label>
+              Password
+              <input type="password" id="loginPassword" required placeholder="Password" />
+            </label>
+            <button class="primary-btn" type="submit">Sign In</button>
+          </form>
+        </div>
+      </div>
+
+      <div id="userProfileCard" class="form-card hidden">
+        <h3>User Session</h3>
+        <p id="userIdentity" class="meta"></p>
+        <p id="userAdminStatus" class="meta"></p>
+        <div class="actions-row">
+          <button id="requestAdminAccessBtn" class="primary-btn" type="button">Request Admin Permission</button>
+          <button id="userLogoutBtn" class="secondary-btn" type="button">User Logout</button>
+        </div>
+      </div>
+
+      <p id="userAuthMessage" class="feedback-text"></p>
+    </section>
+
+    <section class="page" data-route="admin" id="admin" aria-labelledby="adminTitle" hidden>
+      <div class="section-head">
+        <p class="eyebrow">Admin Authentication</p>
+        <h2 id="adminTitle">Admin Sign In</h2>
+        <p>Only harshkamle03@gmail.com gets direct admin access. Other users require explicit owner approval.</p>
+      </div>
+
+      <div class="form-card">
+        <form id="adminLoginForm" class="portal-form">
+          <div class="form-grid two">
+            <label>
+              Admin Email
+              <input type="email" id="adminEmail" required placeholder="admin email" />
+            </label>
+            <label>
+              Password
+              <input type="password" id="adminPassword" required placeholder="admin password" />
+            </label>
+          </div>
+          <button class="primary-btn" type="submit">Admin Sign In</button>
+        </form>
+
+        <p id="adminLoginMessage" class="feedback-text"></p>
+      </div>
+
+      <div id="adminPanel" class="hidden">
+        <div class="form-card">
+          <div class="admin-head">
+            <div>
+              <h3>Admin Dashboard</h3>
+              <p id="adminIdentity" class="meta"></p>
+            </div>
+            <button id="adminLogoutBtn" class="secondary-btn" type="button">Admin Logout</button>
+          </div>
+
+          <div class="filters-grid">
+            <input type="search" id="adminSearchInput" placeholder="Search complaints..." />
+            <select id="adminFilterCollege"></select>
+            <select id="adminFilterStatus">
+              <option value="">All Status</option>
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+            </select>
+            <div></div>
+          </div>
+
+          <p id="adminActionMessage" class="feedback-text"></p>
+          <div id="adminComplaintsGrid" class="complaints-grid admin-grid"></div>
+        </div>
+
+        <div id="adminRequestsPanel" class="form-card hidden">
+          <h3>Pending Admin Access Requests</h3>
+          <div id="adminRequestsList" class="requests-list"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
+
+
+
+

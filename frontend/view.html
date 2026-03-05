@@ -1,0 +1,128 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Indore Campus Care | View Complaints</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="top-header">
+    <nav class="navbar container">
+      <a href="/" class="brand">Indore Campus Care</a>
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">Menu</button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Home</a></li>
+        <li><a href="/submit">Submit Complaint</a></li>
+        <li><a class="active" href="/view">View Complaints</a></li>
+        <li><button class="nav-btn ghost" id="openTrackModal">Track Complaint</button></li>
+        <li><button class="nav-btn" id="openAdminLogin">Admin Login</button></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <p class="tag">Public grievance board</p>
+        <h1>View Complaints</h1>
+        <p class="subtitle">Browse complaints by college, category, and status. Search by title, description, or complaint ID.</p>
+      </div>
+    </section>
+
+    <section class="view-section container" id="view">
+      <div class="filters">
+        <input type="search" id="searchInput" placeholder="Search complaints..." />
+        <select id="filterCollege"></select>
+        <select id="filterCategory">
+          <option value="">All Categories</option>
+          <option value="Infrastructure">Infrastructure</option>
+          <option value="Cleanliness">Cleanliness</option>
+          <option value="Faculty">Faculty</option>
+          <option value="Facilities">Facilities</option>
+          <option value="Internet">Internet</option>
+          <option value="Hostel">Hostel</option>
+          <option value="Other">Other</option>
+        </select>
+        <select id="filterStatus">
+          <option value="">All Status</option>
+          <option value="Pending">Pending</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Resolved">Resolved</option>
+        </select>
+      </div>
+      <div id="complaintsGrid" class="complaints-grid"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p><strong>Indore Campus Care</strong> | Built for student issue reporting</p>
+      <p>Contact: support@indorecampuscare.in | +91-731-400-0000</p>
+    </div>
+  </footer>
+
+  <div class="modal-overlay" id="trackOverlay">
+    <div class="modal-card">
+      <button class="close-btn" data-close="trackOverlay">&times;</button>
+      <h3>Track Complaint</h3>
+      <form id="trackForm">
+        <div class="form-row">
+          <label for="trackComplaintId">Complaint ID</label>
+          <input type="text" id="trackComplaintId" required />
+        </div>
+        <div class="form-row">
+          <label for="trackEmail">Email (Optional)</label>
+          <input type="email" id="trackEmail" />
+        </div>
+        <button type="submit" class="cta-btn">Check Status</button>
+      </form>
+      <div id="trackResult" class="track-result"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="adminLoginOverlay">
+    <div class="modal-card">
+      <button class="close-btn" data-close="adminLoginOverlay">&times;</button>
+      <h3>Admin Login</h3>
+      <form id="adminLoginForm">
+        <div class="form-row">
+          <label for="adminUsername">Username or Email</label>
+          <input id="adminUsername" type="text" required />
+        </div>
+        <div class="form-row">
+          <label for="adminPassword">Password</label>
+          <input id="adminPassword" type="password" required />
+        </div>
+        <button type="submit" class="cta-btn">Login</button>
+        <p id="adminLoginMessage" class="form-message"></p>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="adminDashboardOverlay">
+    <div class="modal-card dashboard-card">
+      <button class="close-btn" data-close="adminDashboardOverlay">&times;</button>
+      <div class="dashboard-head">
+        <h3>Admin Dashboard</h3>
+        <button id="adminLogout" class="nav-btn ghost">Logout</button>
+      </div>
+      <div class="filters">
+        <input type="search" id="adminSearchInput" placeholder="Search complaints..." />
+        <select id="adminFilterCollege"></select>
+        <select id="adminFilterStatus">
+          <option value="">All Status</option>
+          <option value="Pending">Pending</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Resolved">Resolved</option>
+        </select>
+      </div>
+      <p id="adminActionMessage" class="form-message"></p>
+      <div id="adminComplaintsGrid" class="complaints-grid admin-grid"></div>
+    </div>
+  </div>
+
+  <script src="/script.js"></script>
+</body>
+</html>
+
