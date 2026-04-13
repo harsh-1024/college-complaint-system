@@ -5,5 +5,9 @@ window.APP_CONFIG = {
 
   // Optional explicit backend origin for media URLs.
   // Example: SERVER_BASE: "https://your-backend.onrender.com"
-  SERVER_BASE: ""
+  SERVER_BASE: "",
+
+  // Owner admin email shown on the admin sign-in page.
+  OWNER_ADMIN_EMAIL: "harshkamle03@gmail.com"
 };
+

@@ -157,7 +157,8 @@ body.dark-mode {
 
 .hero-card,
 .form-card,
-.section-head {
+.section-head,
+.owner-admin-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -230,6 +231,25 @@ body.dark-mode {
 
 .form-card {
   padding: 1.2rem;
+}
+
+.owner-admin-card {
+  padding: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 10%, var(--surface)), var(--surface)),
+    var(--surface);
+}
+
+.owner-admin-card h3 {
+  margin-bottom: 0.25rem;
+}
+
+.owner-admin-card p:last-child {
+  color: var(--muted);
 }
 
 .portal-form {
@@ -592,6 +612,11 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 
+  .owner-admin-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .nav-shell {
     gap: 0.45rem;
   }
@@ -606,5 +631,4 @@ textarea:focus {
     padding: 0.42rem 0.72rem;
   }
 }
-
 

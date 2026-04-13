@@ -3,6 +3,8 @@ const API_BASE = configuredApiBase ? configuredApiBase.replace(/\/$/, "") : `${w
 const configuredServerBase = (window.APP_CONFIG && window.APP_CONFIG.SERVER_BASE) ? String(window.APP_CONFIG.SERVER_BASE).trim() : "";
 const derivedServerBase = API_BASE.replace(/\/api$/, "");
 const SERVER_BASE = configuredServerBase ? configuredServerBase.replace(/\/$/, "") : derivedServerBase;
+const configuredOwnerAdminEmail = (window.APP_CONFIG && window.APP_CONFIG.OWNER_ADMIN_EMAIL) ? String(window.APP_CONFIG.OWNER_ADMIN_EMAIL).trim().toLowerCase() : "";
+const OWNER_ADMIN_EMAIL = configuredOwnerAdminEmail || "harshkamle03@gmail.com";
 const ROUTES = ["home", "submit", "view", "track", "auth", "admin"];
 const HOME_ROUTE = "home";
 const THEME_KEY = "themePreference";
@@ -104,6 +106,8 @@ const adminResetCodeInput = byId("adminResetCode");
 const adminNewPasswordInput = byId("adminNewPassword");
 const adminForgotPasswordMessage = byId("adminForgotPasswordMessage");
 const adminLoginMessage = byId("adminLoginMessage");
+const ownerAdminEmailText = byId("ownerAdminEmailText");
+const useOwnerAdminBtn = byId("useOwnerAdminBtn");
 const adminPanel = byId("adminPanel");
 const adminIdentity = byId("adminIdentity");
 const adminLogoutBtn = byId("adminLogoutBtn");
@@ -247,6 +251,19 @@ function toggleForgotPanel(panel, button, forceOpen) {
   const open = typeof forceOpen === "boolean" ? forceOpen : panel.classList.contains("hidden");
   panel.classList.toggle("hidden", !open);
   if (button) button.textContent = open ? "Hide Forgot Password" : "Forgot Password?";
+}
+
+function seedOwnerAdminFields() {
+  if (ownerAdminEmailText) {
+    ownerAdminEmailText.textContent = OWNER_ADMIN_EMAIL;
+  }
+
+  [adminEmailInput, adminForgotEmailInput].filter(Boolean).forEach((input) => {
+    input.placeholder = OWNER_ADMIN_EMAIL;
+    if (!input.value.trim()) {
+      input.value = OWNER_ADMIN_EMAIL;
+    }
+  });
 }
 
 async function requestPasswordResetCode(email) {
@@ -713,6 +730,7 @@ async function handleAdminLogin(event) {
     setFeedback(adminLoginMessage, "Admin signed in successfully.", "success");
     showToast("Admin signed in");
     adminLoginForm.reset();
+    seedOwnerAdminFields();
 
     await loadAdminComplaints();
     if (adminSession.isOwner) await loadAdminRequests();
@@ -728,6 +746,7 @@ async function handleAdminLogout() {
     // Ignore
   }
   setAdminSession(null);
+  seedOwnerAdminFields();
   setFeedback(adminLoginMessage, "Admin logged out.", "success");
 }
 
@@ -956,6 +975,18 @@ function attachFormEvents() {
 
   if (adminForgotRequestForm) adminForgotRequestForm.addEventListener("submit", handleAdminForgotRequest);
   if (adminResetPasswordForm) adminResetPasswordForm.addEventListener("submit", handleAdminResetPassword);
+  if (useOwnerAdminBtn) {
+    useOwnerAdminBtn.addEventListener("click", () => {
+      if (adminEmailInput) {
+        adminEmailInput.value = OWNER_ADMIN_EMAIL;
+        adminEmailInput.focus();
+      }
+      if (adminForgotEmailInput && !adminForgotEmailInput.value.trim()) {
+        adminForgotEmailInput.value = OWNER_ADMIN_EMAIL;
+      }
+      setFeedback(adminLoginMessage, `Owner admin email loaded: ${OWNER_ADMIN_EMAIL}`, "success");
+    });
+  }
 
   [adminSearchInput, adminFilterCollege, adminFilterStatus].filter(Boolean).forEach((element) => {
     element.addEventListener("input", loadAdminComplaints);
@@ -1033,6 +1064,7 @@ async function init() {
   populateCollegeOptions();
   initializePasswordVisibilityToggles();
   applyTheme(localStorage.getItem(THEME_KEY) || "light");
+  seedOwnerAdminFields();
 
   attachNavigationEvents();
   attachFormEvents();
@@ -1048,13 +1080,4 @@ async function init() {
 }
 
 init();
-
-
-
-
-
-
-
-
-
 
