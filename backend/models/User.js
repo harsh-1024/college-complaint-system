@@ -1,4 +1,4 @@
-﻿const fs = require("fs/promises");
+const fs = require("fs/promises");
 const path = require("path");
 const crypto = require("crypto");
 
@@ -11,6 +11,10 @@ function normalizeEmail(value = "") {
 
 function hashPassword(password = "") {
   return crypto.createHash("sha256").update(String(password)).digest("hex");
+}
+
+function generateResetCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
 }
 
 async function ensureStore() {
@@ -85,6 +89,8 @@ class User {
         users[existingIndex].name = name || users[existingIndex].name || "Owner Admin";
         users[existingIndex].passwordHash = hashPassword(password);
         users[existingIndex].adminStatus = "approved";
+        delete users[existingIndex].resetCodeHash;
+        delete users[existingIndex].resetCodeExpiresAt;
         users[existingIndex].updatedAt = now;
         await writeUsers(users);
         return sanitizeUser(users[existingIndex]);
@@ -176,6 +182,77 @@ class User {
 
     await writeUsers(users);
     return sanitizeUser(users[index]);
+  }
+
+  static async createPasswordResetCode(email) {
+    const normalizedEmail = normalizeEmail(email || "");
+    const users = await readUsers();
+    const index = users.findIndex((item) => item.email === normalizedEmail);
+
+    if (index === -1) {
+      return null;
+    }
+
+    const code = generateResetCode();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+    users[index].resetCodeHash = hashPassword(code);
+    users[index].resetCodeExpiresAt = expiresAt;
+    users[index].updatedAt = new Date().toISOString();
+
+    await writeUsers(users);
+    return { email: normalizedEmail, code, expiresAt };
+  }
+
+  static async resetPasswordByCode(email, code, newPassword) {
+    const normalizedEmail = normalizeEmail(email || "");
+    const resetCode = String(code || "").trim();
+    const password = String(newPassword || "");
+
+    if (!normalizedEmail) {
+      throw new Error("Email is required");
+    }
+
+    if (!resetCode) {
+      throw new Error("Reset code is required");
+    }
+
+    if (password.length < 6) {
+      throw new Error("Password must be at least 6 characters");
+    }
+
+    const users = await readUsers();
+    const index = users.findIndex((item) => item.email === normalizedEmail);
+
+    if (index === -1) {
+      return null;
+    }
+
+    const user = users[index];
+
+    if (!user.resetCodeHash || !user.resetCodeExpiresAt) {
+      throw new Error("Please request a reset code first");
+    }
+
+    if (new Date(user.resetCodeExpiresAt).getTime() < Date.now()) {
+      delete user.resetCodeHash;
+      delete user.resetCodeExpiresAt;
+      user.updatedAt = new Date().toISOString();
+      await writeUsers(users);
+      throw new Error("Reset code expired. Request a new code");
+    }
+
+    if (user.resetCodeHash !== hashPassword(resetCode)) {
+      throw new Error("Invalid reset code");
+    }
+
+    user.passwordHash = hashPassword(password);
+    delete user.resetCodeHash;
+    delete user.resetCodeExpiresAt;
+    user.updatedAt = new Date().toISOString();
+
+    await writeUsers(users);
+    return sanitizeUser(user);
   }
 }
 

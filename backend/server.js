@@ -1,7 +1,8 @@
-﻿require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const path = require("path");
 
 const complaintRoutes = require("./routes/complaintRoutes");
 const adminRoutes = require("./routes/adminRoutes");
@@ -68,3 +69,4 @@ app.use((error, _req, res, _next) => {
 app.listen(PORT, () => {
   console.log(`Complaint management server running on http://localhost:${PORT}`);
 });
+

@@ -1,7 +1,8 @@
-﻿const express = require("express");
+const express = require("express");
 const crypto = require("crypto");
 
 const User = require("../models/User");
+const { sendPasswordResetEmail } = require("../lib/emailService");
 
 const router = express.Router();
 const activeUserTokens = new Map();
@@ -79,6 +80,86 @@ router.post("/login", async (req, res) => {
   }
 });
 
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email || "");
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: "Please enter a valid email" });
+    }
+
+    const reset = await User.createPasswordResetCode(email);
+
+    if (!reset) {
+      return res.status(404).json({ message: "No account found with this email" });
+    }
+
+    const delivery = await sendPasswordResetEmail({
+      to: email,
+      resetCode: reset.code,
+      expiresAt: reset.expiresAt
+    });
+
+    const response = {
+      message: "Reset code generated. It is valid for 15 minutes.",
+      expiresAt: reset.expiresAt,
+      delivery: delivery.sent ? "email" : "onscreen"
+    };
+
+    // If SMTP is not configured yet, show code in response for local testing.
+    if (!delivery.sent) {
+      response.message = "Email service not configured yet. Reset code is shown on screen for now.";
+      response.resetCode = reset.code;
+    }
+
+    return res.json(response);
+  } catch (error) {
+    return res.status(500).json({ message: error.message || "Unable to generate reset code" });
+  }
+});
+
+router.post("/reset-password", async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email || "");
+    const code = String(req.body.code || req.body.resetCode || "").trim();
+    const newPassword = String(req.body.newPassword || req.body.password || "");
+
+    if (!email || !code || !newPassword) {
+      return res.status(400).json({ message: "Email, reset code, and new password are required" });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: "Please enter a valid email" });
+    }
+
+    const user = await User.resetPasswordByCode(email, code, newPassword);
+
+    if (!user) {
+      return res.status(404).json({ message: "No account found with this email" });
+    }
+
+    // Invalidate active user sessions for this account after password reset.
+    for (const [token, sessionUser] of activeUserTokens.entries()) {
+      if (sessionUser && sessionUser.email === email) {
+        activeUserTokens.delete(token);
+      }
+    }
+
+    return res.json({
+      message: "Password reset successful. Please sign in with your new password.",
+      user
+    });
+  } catch (error) {
+    const message = error.message || "Unable to reset password";
+    const statusCode = /required|valid email|least 6|invalid|expired|request a reset code/i.test(message) ? 400 : 500;
+    return res.status(statusCode).json({ message });
+  }
+});
+
 router.post("/logout", authenticateUser, (req, res) => {
   activeUserTokens.delete(req.userToken);
   return res.json({ message: "User logged out successfully" });
@@ -111,3 +192,5 @@ router.post("/request-admin", authenticateUser, async (req, res) => {
 });
 
 module.exports = router;
+
+

@@ -83,10 +83,26 @@ const userIdentity = byId("userIdentity");
 const userAdminStatus = byId("userAdminStatus");
 const requestAdminAccessBtn = byId("requestAdminAccessBtn");
 const userLogoutBtn = byId("userLogoutBtn");
+const toggleUserForgotPanelBtn = byId("toggleUserForgotPanelBtn");
+const userForgotPanel = byId("userForgotPanel");
+const userForgotRequestForm = byId("userForgotRequestForm");
+const forgotEmailInput = byId("forgotEmail");
+const userResetPasswordForm = byId("userResetPasswordForm");
+const resetCodeInput = byId("resetCode");
+const resetNewPasswordInput = byId("resetNewPassword");
+const forgotPasswordMessage = byId("forgotPasswordMessage");
 
 const adminLoginForm = byId("adminLoginForm");
 const adminEmailInput = byId("adminEmail");
 const adminPasswordInput = byId("adminPassword");
+const toggleAdminForgotPanelBtn = byId("toggleAdminForgotPanelBtn");
+const adminForgotPanel = byId("adminForgotPanel");
+const adminForgotRequestForm = byId("adminForgotRequestForm");
+const adminForgotEmailInput = byId("adminForgotEmail");
+const adminResetPasswordForm = byId("adminResetPasswordForm");
+const adminResetCodeInput = byId("adminResetCode");
+const adminNewPasswordInput = byId("adminNewPassword");
+const adminForgotPasswordMessage = byId("adminForgotPasswordMessage");
 const adminLoginMessage = byId("adminLoginMessage");
 const adminPanel = byId("adminPanel");
 const adminIdentity = byId("adminIdentity");
@@ -168,6 +184,57 @@ function showToast(message) {
   toastTimer = setTimeout(() => toast.classList.remove("show"), 2400);
 }
 
+function initializePasswordVisibilityToggles() {
+  const passwordInputs = Array.from(document.querySelectorAll("input[type='password']"));
+
+  passwordInputs.forEach((input) => {
+    if (input.dataset.passwordToggleReady === "true") return;
+    input.dataset.passwordToggleReady = "true";
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "password-field";
+
+    const parent = input.parentNode;
+    parent.insertBefore(wrapper, input);
+    wrapper.appendChild(input);
+
+    const toggleButton = document.createElement("button");
+    toggleButton.type = "button";
+    toggleButton.className = "password-toggle";
+    toggleButton.setAttribute("aria-label", "Hold to show password");
+    toggleButton.innerHTML = "&#128065;";
+    wrapper.appendChild(toggleButton);
+
+    const showPassword = () => {
+      input.type = "text";
+      toggleButton.classList.add("active");
+    };
+
+    const hidePassword = () => {
+      input.type = "password";
+      toggleButton.classList.remove("active");
+    };
+
+    toggleButton.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      showPassword();
+    });
+    toggleButton.addEventListener("pointerleave", hidePassword);
+    toggleButton.addEventListener("blur", hidePassword);
+
+    toggleButton.addEventListener("keydown", (event) => {
+      if (event.key === " " || event.key === "Enter") {
+        event.preventDefault();
+        showPassword();
+      }
+    });
+    toggleButton.addEventListener("keyup", hidePassword);
+
+    document.addEventListener("pointerup", hidePassword);
+    document.addEventListener("pointercancel", hidePassword);
+  });
+}
+
 function setFeedback(element, message, type = "") {
   if (!element) return;
   element.textContent = message;
@@ -175,6 +242,36 @@ function setFeedback(element, message, type = "") {
   if (type) element.classList.add(type);
 }
 
+function toggleForgotPanel(panel, button, forceOpen) {
+  if (!panel) return;
+  const open = typeof forceOpen === "boolean" ? forceOpen : panel.classList.contains("hidden");
+  panel.classList.toggle("hidden", !open);
+  if (button) button.textContent = open ? "Hide Forgot Password" : "Forgot Password?";
+}
+
+async function requestPasswordResetCode(email) {
+  const response = await fetch(`${API_BASE}/auth/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email })
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || "Unable to generate reset code");
+  return data;
+}
+
+async function submitPasswordResetCode(email, code, newPassword) {
+  const response = await fetch(`${API_BASE}/auth/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, code, newPassword })
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || "Unable to reset password");
+  return data;
+}
 function mediaPath(imageUrl) {
   if (!imageUrl) return "";
   if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
@@ -450,6 +547,108 @@ async function handleUserLogout() {
   setFeedback(userAuthMessage, "User logged out.", "success");
 }
 
+async function handleUserForgotRequest(event) {
+  event.preventDefault();
+  const email = forgotEmailInput ? forgotEmailInput.value.trim() : "";
+
+  if (!email) {
+    setFeedback(forgotPasswordMessage, "Please enter your email", "error");
+    return;
+  }
+
+  try {
+    const data = await requestPasswordResetCode(email);
+    let message = `Reset code sent to ${email}. Please check your Gmail inbox/spam.`;
+
+    if (data.resetCode) {
+      message = `Reset code: ${data.resetCode} (valid for 15 minutes)`;
+      showToast("Reset code generated");
+    }
+
+    setFeedback(forgotPasswordMessage, message, "success");
+
+    if (resetCodeInput) resetCodeInput.focus();
+  } catch (error) {
+    setFeedback(forgotPasswordMessage, error.message || "Unable to generate reset code", "error");
+  }
+}
+
+async function handleUserResetPassword(event) {
+  event.preventDefault();
+
+  const email = forgotEmailInput ? forgotEmailInput.value.trim() : "";
+  const code = resetCodeInput ? resetCodeInput.value.trim() : "";
+  const newPassword = resetNewPasswordInput ? resetNewPasswordInput.value : "";
+
+  if (!email || !code || !newPassword) {
+    setFeedback(forgotPasswordMessage, "Email, reset code, and new password are required", "error");
+    return;
+  }
+
+  try {
+    await submitPasswordResetCode(email, code, newPassword);
+    setFeedback(forgotPasswordMessage, "Password updated successfully. You can now sign in.", "success");
+    showToast("Password updated");
+
+    if (loginEmailInput) loginEmailInput.value = email;
+    if (loginPasswordInput) loginPasswordInput.value = "";
+    if (userResetPasswordForm) userResetPasswordForm.reset();
+    if (loginPasswordInput) loginPasswordInput.focus();
+  } catch (error) {
+    setFeedback(forgotPasswordMessage, error.message || "Unable to reset password", "error");
+  }
+}
+
+async function handleAdminForgotRequest(event) {
+  event.preventDefault();
+  const email = adminForgotEmailInput ? adminForgotEmailInput.value.trim() : "";
+
+  if (!email) {
+    setFeedback(adminForgotPasswordMessage, "Please enter admin email", "error");
+    return;
+  }
+
+  try {
+    const data = await requestPasswordResetCode(email);
+    let message = `Reset code sent to ${email}. Please check your Gmail inbox/spam.`;
+
+    if (data.resetCode) {
+      message = `Reset code: ${data.resetCode} (valid for 15 minutes)`;
+      showToast("Admin reset code generated");
+    }
+
+    setFeedback(adminForgotPasswordMessage, message, "success");
+    if (adminResetCodeInput) adminResetCodeInput.focus();
+  } catch (error) {
+    setFeedback(adminForgotPasswordMessage, error.message || "Unable to generate reset code", "error");
+  }
+}
+
+async function handleAdminResetPassword(event) {
+  event.preventDefault();
+
+  const email = adminForgotEmailInput ? adminForgotEmailInput.value.trim() : "";
+  const code = adminResetCodeInput ? adminResetCodeInput.value.trim() : "";
+  const newPassword = adminNewPasswordInput ? adminNewPasswordInput.value : "";
+
+  if (!email || !code || !newPassword) {
+    setFeedback(adminForgotPasswordMessage, "Email, reset code, and new password are required", "error");
+    return;
+  }
+
+  try {
+    await submitPasswordResetCode(email, code, newPassword);
+    setFeedback(adminForgotPasswordMessage, "Admin password updated. Sign in with the new password.", "success");
+    showToast("Admin password updated");
+
+    if (adminEmailInput) adminEmailInput.value = email;
+    if (adminPasswordInput) adminPasswordInput.value = "";
+    if (adminResetPasswordForm) adminResetPasswordForm.reset();
+    if (adminPasswordInput) adminPasswordInput.focus();
+  } catch (error) {
+    setFeedback(adminForgotPasswordMessage, error.message || "Unable to reset password", "error");
+  }
+}
 async function handleRequestAdminAccess() {
   if (!userSession?.token) {
     setFeedback(userAuthMessage, "Please sign in as user first.", "error");
@@ -494,8 +693,10 @@ const adminHeaders = () => (adminSession?.token ? { Authorization: `Bearer ${adm
 
 async function handleAdminLogin(event) {
   event.preventDefault();
+  const emailValue = adminEmailInput ? adminEmailInput.value.trim() : "";
   const payload = {
-    username: adminEmailInput ? adminEmailInput.value.trim() : "",
+    username: emailValue,
+    email: emailValue,
     password: adminPasswordInput ? adminPasswordInput.value : ""
   };
 
@@ -729,8 +930,32 @@ function attachFormEvents() {
   if (requestAdminAccessBtn) requestAdminAccessBtn.addEventListener("click", handleRequestAdminAccess);
   if (userLogoutBtn) userLogoutBtn.addEventListener("click", handleUserLogout);
 
+  if (toggleUserForgotPanelBtn) {
+    toggleUserForgotPanelBtn.addEventListener("click", () => {
+      if (forgotEmailInput && loginEmailInput && !forgotEmailInput.value.trim()) {
+        forgotEmailInput.value = loginEmailInput.value.trim();
+      }
+      toggleForgotPanel(userForgotPanel, toggleUserForgotPanelBtn);
+    });
+  }
+
+  if (userForgotRequestForm) userForgotRequestForm.addEventListener("submit", handleUserForgotRequest);
+  if (userResetPasswordForm) userResetPasswordForm.addEventListener("submit", handleUserResetPassword);
+
   if (adminLoginForm) adminLoginForm.addEventListener("submit", handleAdminLogin);
   if (adminLogoutBtn) adminLogoutBtn.addEventListener("click", handleAdminLogout);
+
+  if (toggleAdminForgotPanelBtn) {
+    toggleAdminForgotPanelBtn.addEventListener("click", () => {
+      if (adminForgotEmailInput && adminEmailInput && !adminForgotEmailInput.value.trim()) {
+        adminForgotEmailInput.value = adminEmailInput.value.trim();
+      }
+      toggleForgotPanel(adminForgotPanel, toggleAdminForgotPanelBtn);
+    });
+  }
+
+  if (adminForgotRequestForm) adminForgotRequestForm.addEventListener("submit", handleAdminForgotRequest);
+  if (adminResetPasswordForm) adminResetPasswordForm.addEventListener("submit", handleAdminResetPassword);
 
   [adminSearchInput, adminFilterCollege, adminFilterStatus].filter(Boolean).forEach((element) => {
     element.addEventListener("input", loadAdminComplaints);
@@ -806,6 +1031,7 @@ function attachFormEvents() {
 
 async function init() {
   populateCollegeOptions();
+  initializePasswordVisibilityToggles();
   applyTheme(localStorage.getItem(THEME_KEY) || "light");
 
   attachNavigationEvents();
@@ -822,5 +1048,13 @@ async function init() {
 }
 
 init();
+
+
+
+
+
+
+
+
 
 

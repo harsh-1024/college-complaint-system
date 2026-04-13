@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg: #f3f7fc;
   --surface: #ffffff;
   --surface-soft: #f8fbff;
@@ -270,6 +270,42 @@ textarea:focus {
   border-color: var(--primary);
 }
 
+.password-field {
+  position: relative;
+  width: 100%;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 3rem;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.55rem;
+  transform: translateY(-50%);
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.password-toggle:hover,
+.password-toggle.active {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 45%, white);
+}
+
 .primary-btn {
   justify-self: start;
   border: none;
@@ -283,6 +319,34 @@ textarea:focus {
 
 .primary-btn:hover {
   filter: brightness(0.96);
+}
+
+.text-btn {
+  justify-self: start;
+  border: none;
+  background: transparent;
+  color: var(--primary);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.1rem 0;
+}
+
+.text-btn:hover {
+  text-decoration: underline;
+}
+
+.forgot-panel {
+  margin-top: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem;
+  background: var(--surface-soft);
+  display: grid;
+  gap: 0.7rem;
+}
+
+.forgot-panel h4 {
+  font-size: 1rem;
 }
 
 .actions-row {
@@ -542,3 +606,5 @@ textarea:focus {
     padding: 0.42rem 0.72rem;
   }
 }
+
+

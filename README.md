@@ -63,3 +63,18 @@
 4. Submit sitemap URL in Search Console:
    - `https://USERNAME.github.io/REPO_NAME/sitemap.xml`
 5. Wait for Google indexing (can take days).
+## Forgot Password Email (Gmail)
+
+1. In your Gmail account, enable 2-Step Verification.
+2. Create an App Password in Google Account security settings.
+3. Set these values in `backend/.env`:
+   - `SMTP_HOST=smtp.gmail.com`
+   - `SMTP_PORT=587`
+   - `SMTP_SECURE=false`
+   - `SMTP_USER=your-gmail@gmail.com`
+   - `SMTP_PASS=your-16-char-app-password`
+   - `MAIL_FROM=Indore Complaint Portal <your-gmail@gmail.com>`
+4. Restart backend server.
+5. Use "Forgot Password" in User/Admin Sign In; reset code will be sent to that email.
+
+If SMTP is not configured, reset code is shown on screen (local fallback mode).

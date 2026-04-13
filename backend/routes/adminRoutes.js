@@ -1,4 +1,4 @@
-﻿const express = require("express");
+const express = require("express");
 const crypto = require("crypto");
 
 const Complaint = require("../models/Complaint");
@@ -69,7 +69,7 @@ async function removeSupabaseImageIfExists(imageUrl) {
 
 router.post("/login", async (req, res) => {
   try {
-    const username = (req.body.username || "").trim();
+    const username = (req.body.username || req.body.email || "").trim();
     const password = String(req.body.password || "");
 
     if (!username || !password) {
@@ -81,6 +81,13 @@ router.post("/login", async (req, res) => {
     const user = await User.authenticate(normalized, password);
 
     if (!user) {
+      if (normalized === ownerEmail) {
+        return res.status(401).json({
+          message:
+            "Owner account/password not configured or password is incorrect. First use User Sign Up with harshkamle03@gmail.com to set your password, then sign in as admin."
+        });
+      }
+
       return res.status(401).json({ message: "Invalid admin credentials" });
     }
 
@@ -200,3 +207,4 @@ router.delete("/complaints/:complaintId", authenticateAdmin, async (req, res) =>
 });
 
 module.exports = router;
+

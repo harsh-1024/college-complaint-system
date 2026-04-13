@@ -220,7 +220,35 @@
               <input type="password" id="loginPassword" required placeholder="Password" />
             </label>
             <button class="primary-btn" type="submit">Sign In</button>
+            <button id="toggleUserForgotPanelBtn" class="text-btn" type="button">Forgot Password?</button>
           </form>
+
+          <div id="userForgotPanel" class="forgot-panel hidden">
+            <h4>Reset User Password</h4>
+            <form id="userForgotRequestForm" class="portal-form">
+              <label>
+                Account Email
+                <input type="email" id="forgotEmail" required placeholder="you@example.com" />
+              </label>
+              <button class="secondary-btn" type="submit">Send Reset Code</button>
+            </form>
+
+            <form id="userResetPasswordForm" class="portal-form">
+              <div class="form-grid two">
+                <label>
+                  Reset Code
+                  <input type="text" id="resetCode" required placeholder="6-digit code" />
+                </label>
+                <label>
+                  New Password
+                  <input type="password" id="resetNewPassword" required minlength="6" placeholder="Minimum 6 characters" />
+                </label>
+              </div>
+              <button class="primary-btn" type="submit">Update Password</button>
+            </form>
+
+            <p id="forgotPasswordMessage" class="feedback-text"></p>
+          </div>
         </div>
       </div>
 
@@ -257,7 +285,35 @@
             </label>
           </div>
           <button class="primary-btn" type="submit">Admin Sign In</button>
+          <button id="toggleAdminForgotPanelBtn" class="text-btn" type="button">Forgot Password?</button>
         </form>
+
+        <div id="adminForgotPanel" class="forgot-panel hidden">
+          <h4>Reset Admin Password</h4>
+          <form id="adminForgotRequestForm" class="portal-form">
+            <label>
+              Admin Email
+              <input type="email" id="adminForgotEmail" required placeholder="admin email" />
+            </label>
+            <button class="secondary-btn" type="submit">Send Reset Code</button>
+          </form>
+
+          <form id="adminResetPasswordForm" class="portal-form">
+            <div class="form-grid two">
+              <label>
+                Reset Code
+                <input type="text" id="adminResetCode" required placeholder="6-digit code" />
+              </label>
+              <label>
+                New Password
+                <input type="password" id="adminNewPassword" required minlength="6" placeholder="Minimum 6 characters" />
+              </label>
+            </div>
+            <button class="primary-btn" type="submit">Update Password</button>
+          </form>
+
+          <p id="adminForgotPasswordMessage" class="feedback-text"></p>
+        </div>
 
         <p id="adminLoginMessage" class="feedback-text"></p>
       </div>
@@ -302,6 +358,7 @@
   <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
