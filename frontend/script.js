@@ -265,29 +265,55 @@ function seedOwnerAdminFields() {
     }
   });
 }
+function backendConnectionMessage() {
+  const target = API_BASE || `${window.location.origin}/api`;
+  if (window.location.hostname.includes("github.io")) {
+    return `Backend API is not configured for this published site yet. It is currently trying ${target}. Host the backend publicly and set API_BASE in frontend/config.js.`;
+  }
+  return `Cannot reach backend API at ${target}. Start the backend with: node backend/server.js`;
+}
+
+async function fetchApiJson(url, options = {}, fallbackMessage = "Request failed") {
+  try {
+    const response = await fetch(url, options);
+    const contentType = response.headers.get("content-type") || "";
+
+    if (!contentType.includes("application/json")) {
+      const text = await response.text();
+      if (/<!doctype html|<html/i.test(text)) {
+        throw new Error(backendConnectionMessage());
+      }
+      throw new Error(text.trim() || fallbackMessage);
+    }
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || fallbackMessage);
+    }
+
+    return data;
+  } catch (error) {
+    if (error instanceof TypeError && /fetch/i.test(error.message)) {
+      throw new Error(backendConnectionMessage());
+    }
+    throw error;
+  }
+}
 
 async function requestPasswordResetCode(email) {
-  const response = await fetch(`${API_BASE}/auth/forgot-password`, {
+  return fetchApiJson(`${API_BASE}/auth/forgot-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email })
-  });
-
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Unable to generate reset code");
-  return data;
+  }, "Unable to generate reset code");
 }
 
 async function submitPasswordResetCode(email, code, newPassword) {
-  const response = await fetch(`${API_BASE}/auth/reset-password`, {
+  return fetchApiJson(`${API_BASE}/auth/reset-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, code, newPassword })
-  });
-
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Unable to reset password");
-  return data;
+  }, "Unable to reset password");
 }
 function mediaPath(imageUrl) {
   if (!imageUrl) return "";
@@ -393,9 +419,7 @@ async function handleComplaintSubmit(event) {
   if (imageInput?.files?.[0]) formData.append("image", imageInput.files[0]);
 
   try {
-    const response = await fetch(`${API_BASE}/complaints`, { method: "POST", body: formData });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Unable to submit complaint");
+    const data = await fetchApiJson(`${API_BASE}/complaints`, { method: "POST", body: formData }, "Unable to submit complaint");
 
     const complaintId = data.complaint ? data.complaint.complaintId : "";
     setFeedback(submitMessage, `Complaint submitted successfully. Complaint ID: ${complaintId}`, "success");
@@ -424,9 +448,7 @@ async function loadPublicComplaints() {
       category: filterCategory ? filterCategory.value : "",
       status: filterStatus ? filterStatus.value : ""
     });
-    const response = await fetch(`${API_BASE}/complaints?${params.toString()}`);
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Unable to load complaints");
+    const data = await fetchApiJson(`${API_BASE}/complaints?${params.toString()}`, {}, "Unable to load complaints");
 
     if (!data.complaints?.length) {
       complaintsGrid.innerHTML = '<div class="empty-state">No complaints found for selected filters.</div>';
@@ -451,9 +473,7 @@ async function handleTrackSubmit(event) {
 
   try {
     const params = new URLSearchParams({ complaintId, email });
-    const response = await fetch(`${API_BASE}/complaints/track?${params.toString()}`);
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Unable to track complaint");
+    const data = await fetchApiJson(`${API_BASE}/complaints/track?${params.toString()}`, {}, "Unable to track complaint");
 
     const complaint = data.complaint;
     const image = complaint.imageUrl ? `<img src="${mediaPath(complaint.imageUrl)}" alt="Complaint evidence" />` : "";
@@ -513,13 +533,11 @@ async function handleUserSignup(event) {
   };
 
   try {
-    const response = await fetch(`${API_BASE}/auth/signup`, {
+    const data = await fetchApiJson(`${API_BASE}/auth/signup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Sign up failed");
+    }, "Sign up failed");
 
     setFeedback(userAuthMessage, data.message || "Sign up successful. Please sign in.", "success");
     showToast("User signup successful");
@@ -537,13 +555,11 @@ async function handleUserLogin(event) {
   };
 
   try {
-    const response = await fetch(`${API_BASE}/auth/login`, {
+    const data = await fetchApiJson(`${API_BASE}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Sign in failed");
+    }, "Sign in failed");
 
     setUserSession({ token: data.token, user: data.user });
     setFeedback(userAuthMessage, "User signed in successfully.", "success");
@@ -672,12 +688,10 @@ async function handleRequestAdminAccess() {
     return;
   }
   try {
-    const response = await fetch(`${API_BASE}/auth/request-admin`, {
+    const data = await fetchApiJson(`${API_BASE}/auth/request-admin`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...userHeaders() }
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Unable to request admin access");
+    }, "Unable to request admin access");
 
     setUserSession({ token: userSession.token, user: data.user });
     setFeedback(userAuthMessage, data.message, "success");
@@ -718,13 +732,11 @@ async function handleAdminLogin(event) {
   };
 
   try {
-    const response = await fetch(`${API_BASE}/admin/login`, {
+    const data = await fetchApiJson(`${API_BASE}/admin/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Admin sign in failed");
+    }, "Admin sign in failed");
 
     setAdminSession({ token: data.token, email: data.email, isOwner: Boolean(data.isOwner) });
     setFeedback(adminLoginMessage, "Admin signed in successfully.", "success");
@@ -822,9 +834,7 @@ async function loadAdminComplaints() {
       college: adminFilterCollege ? adminFilterCollege.value : "",
       status: adminFilterStatus ? adminFilterStatus.value : ""
     });
-    const response = await fetch(`${API_BASE}/admin/complaints?${params.toString()}`, { headers: { ...adminHeaders() } });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Unable to load admin complaints");
+    const data = await fetchApiJson(`${API_BASE}/admin/complaints?${params.toString()}`, { headers: { ...adminHeaders() } }, "Unable to load admin complaints");
 
     if (!data.complaints?.length) {
       adminComplaintsGrid.innerHTML = '<div class="empty-state">No complaints found.</div>';
@@ -839,21 +849,15 @@ async function loadAdminComplaints() {
 }
 
 async function updateComplaint(complaintId, status, adminComments) {
-  const response = await fetch(`${API_BASE}/admin/complaints/${encodeURIComponent(complaintId)}`, {
+  return fetchApiJson(`${API_BASE}/admin/complaints/${encodeURIComponent(complaintId)}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...adminHeaders() },
     body: JSON.stringify({ status, adminComments })
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Unable to update complaint");
-  return data;
+  }, "Unable to update complaint");
 }
 
 async function deleteComplaint(complaintId) {
-  const response = await fetch(`${API_BASE}/admin/complaints/${encodeURIComponent(complaintId)}`, { method: "DELETE", headers: { ...adminHeaders() } });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Unable to delete complaint");
-  return data;
+  return fetchApiJson(`${API_BASE}/admin/complaints/${encodeURIComponent(complaintId)}`, { method: "DELETE", headers: { ...adminHeaders() } }, "Unable to delete complaint");
 }
 
 function renderAdminRequests(requests) {
@@ -879,9 +883,7 @@ function renderAdminRequests(requests) {
 async function loadAdminRequests() {
   if (!adminSession?.token || !adminSession.isOwner || !adminRequestsList) return;
   try {
-    const response = await fetch(`${API_BASE}/admin/access-requests`, { headers: { ...adminHeaders() } });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Unable to load admin requests");
+    const data = await fetchApiJson(`${API_BASE}/admin/access-requests`, { headers: { ...adminHeaders() } }, "Unable to load admin requests");
     renderAdminRequests(data.requests || []);
   } catch (error) {
     adminRequestsList.innerHTML = `<div class="empty-state">${escapeHtml(error.message || "Failed to load access requests")}</div>`;
@@ -889,14 +891,11 @@ async function loadAdminRequests() {
 }
 
 async function updateAdminRequest(email, status) {
-  const response = await fetch(`${API_BASE}/admin/access-requests/${encodeURIComponent(email)}`, {
+  return fetchApiJson(`${API_BASE}/admin/access-requests/${encodeURIComponent(email)}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...adminHeaders() },
     body: JSON.stringify({ status })
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Unable to update request");
-  return data;
+  }, "Unable to update request");
 }
 
 function attachNavigationEvents() {
@@ -1080,4 +1079,6 @@ async function init() {
 }
 
 init();
+
+
 
