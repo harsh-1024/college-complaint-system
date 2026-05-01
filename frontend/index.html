@@ -39,7 +39,15 @@
             Students can report infrastructure, cleanliness, facilities, faculty, internet, and hostel issues.
             Name and email are optional during complaint submission.
           </p>
-          <button class="primary-btn section-jump" data-target-route="submit" type="button">Submit a Complaint</button>
+          <div class="hero-actions">
+            <button class="primary-btn section-jump" data-target-route="submit" type="button">Submit a Complaint</button>
+            <button class="secondary-btn ghost-btn section-jump" data-target-route="view" type="button">Explore Complaints</button>
+          </div>
+          <div class="hero-signal" aria-label="Platform highlights">
+            <span>Anonymous-friendly</span>
+            <span>Complaint ID tracking</span>
+            <span>Admin review flow</span>
+          </div>
         </div>
         <div class="quick-points">
           <article>
@@ -63,6 +71,21 @@
         <p class="eyebrow">Submit Complaint</p>
         <h2 id="submitTitle">Register a New Complaint</h2>
         <p>Required: College, Category, Title, Description. Name and Email are optional.</p>
+      </div>
+
+      <div class="info-strip">
+        <article class="info-card">
+          <strong>Anonymous option</strong>
+          <span>Leave name and email blank if you want to stay private.</span>
+        </article>
+        <article class="info-card">
+          <strong>Evidence helps</strong>
+          <span>Upload a photo if you want the complaint to be easier to verify.</span>
+        </article>
+        <article class="info-card">
+          <strong>Track later</strong>
+          <span>Your complaint ID is generated after submission for quick follow-up.</span>
+        </article>
       </div>
 
       <div class="form-card">
@@ -128,6 +151,21 @@
         <p>Filter by college, category, status or search by complaint title/ID.</p>
       </div>
 
+      <div class="info-strip compact-strip">
+        <article class="info-card">
+          <strong>Quick search</strong>
+          <span>Search by complaint title or complaint ID.</span>
+        </article>
+        <article class="info-card">
+          <strong>Smart filters</strong>
+          <span>Narrow the list by college, category, or status.</span>
+        </article>
+        <article class="info-card">
+          <strong>Status glance</strong>
+          <span>Badges show whether a complaint is pending, in progress, or resolved.</span>
+        </article>
+      </div>
+
       <div class="form-card">
         <div class="filters-grid">
           <input type="search" id="searchInput" placeholder="Search complaints..." />
@@ -159,6 +197,21 @@
         <p class="eyebrow">Track Complaint</p>
         <h2 id="trackTitle">Check Complaint Status</h2>
         <p>Complaint ID is required. Email is optional.</p>
+      </div>
+
+      <div class="info-strip compact-strip">
+        <article class="info-card">
+          <strong>Use your ID</strong>
+          <span>Paste the complaint ID you got after submission.</span>
+        </article>
+        <article class="info-card">
+          <strong>Email optional</strong>
+          <span>Add email only if you used one while filing the complaint.</span>
+        </article>
+        <article class="info-card">
+          <strong>Live update view</strong>
+          <span>See status, admin comments, and evidence in one place.</span>
+        </article>
       </div>
 
       <div class="form-card">
@@ -369,4 +422,3 @@
   <script src="script.js"></script>
 </body>
 </html>
-
